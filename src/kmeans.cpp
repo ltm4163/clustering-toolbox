@@ -5,24 +5,43 @@
 #include <ctime>   // For seeding rand()
 #include <omp.h>
 #include <iostream>
-
-struct Point {
-    double x, y;
-};
+#include "kmeans.h"
+#include "point.h"
 
 // Function to calculate Euclidean distance between two points
 double distance(const Point& a, const Point& b) {
     return std::sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-// Function to randomly initialize centroids
+// Function to initialize centroids using K-Means++
 std::vector<Point> initializeCentroids(const std::vector<Point>& points, int k) {
     std::vector<Point> centroids;
     std::srand(std::time(0));
-    for (int i = 0; i < k; ++i) {
-        int idx = std::rand() % points.size();
-        centroids.push_back(points[idx]);
+    centroids.push_back(points[std::rand() % points.size()]);
+
+    // K-Means++ Initialization: Choose next centroids based on distance
+    for (int i = 1; i < k; ++i) {
+        double maxDist = 0;
+        int newCentroidIdx = 0;
+
+        // Find a new point that maximizes the minimum distance to the existing centroids
+        for (int j = 0; j < points.size(); ++j) {
+            double minDist = std::numeric_limits<double>::max();
+            for (const auto& centroid : centroids) {
+                double dist = distance(points[j], centroid);
+                if (dist < minDist) {
+                    minDist = dist;
+                }
+            }
+            if (minDist > maxDist) {
+                maxDist = minDist;
+                newCentroidIdx = j;
+            }
+        }
+
+        centroids.push_back(points[newCentroidIdx]);
     }
+
     return centroids;
 }
 
@@ -78,7 +97,7 @@ void kMeans(std::vector<Point>& points, int k, int maxIterations) {
         // Step 3: Check for convergence
         #pragma omp parallel for
         for (int j = 0; j < k; ++j) {
-            if (distance(newCentroids[j], centroids[j]) > 1e-4) {
+            if (distance(newCentroids[j], centroids[j]) > 1e-5) {
                 hasConverged = false;
             }
         }
@@ -97,5 +116,4 @@ void kMeans(std::vector<Point>& points, int k, int maxIterations) {
         std::cout << "Cluster " << j << ": (" << centroids[j].x << ", " << centroids[j].y << ")\n";
     }
 }
-
 
