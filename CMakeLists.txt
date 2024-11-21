@@ -1,10 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
-project(ClusteringToolbox)
+project(ClusteringToolbox LANGUAGES CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 find_package(OpenMP REQUIRED)
+find_package(pybind11 REQUIRED)
 
 include_directories(include)
 
-add_executable(clustering-toolbox main.cpp src/kmeans.cpp src/dbscan.cpp)
-target_link_libraries(clustering-toolbox OpenMP::OpenMP_CXX)
+pybind11_add_module(clusterbox
+    python_wrapper.cpp
+    src/dbscan.cpp
+    src/kmeans.cpp
+)
+
+target_link_libraries(clusterbox PUBLIC OpenMP::OpenMP_CXX)
+
