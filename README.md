@@ -1,5 +1,3 @@
-# Create the README.md content
-readme_content = """
 # **Clustering Toolbox**
 
 This project implements clustering algorithms, including **DBSCAN** and **K-Means**, in C++ with Python bindings via `pybind11`. These algorithms are accessible in Python for further testing and visualization. The GPU implementation has been excluded from the final project due to unresolved issues.
@@ -50,4 +48,17 @@ This project implements clustering algorithms, including **DBSCAN** and **K-Mean
    ```bash
    git clone <repository_url>
    cd clustering-toolbox
+   ```
+2. Build the project:
+    ```bash
+    chmod +x build.sh
+    ./build.sh
+    ```
+## **Usage**
+
+### **Python Wrapper**
+The clustering algorithms can be accessed via the Python module clusterbox
+
+
+
 
