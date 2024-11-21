@@ -5,6 +5,7 @@
 #include <cmath>
 #include <queue>
 #include <omp.h>
+#include <stdexcept>  
 
 using namespace std;
 
@@ -53,6 +54,23 @@ void expandCluster(std::vector<Point>& points, int pointIdx, const std::vector<i
 
 // DBSCAN algorithm implementation
 std::vector<Point> dbscan(std::vector<Point>& points, double eps, int minPts) {
+    if (eps <= 0) {
+        throw std::invalid_argument("DBSCAN: 'eps' must be greater than 0.");
+    }
+    if (minPts <= 0) {
+        throw std::invalid_argument("DBSCAN: 'minPts' must be greater than 0.");
+    }
+    if (points.empty()) {
+        throw std::invalid_argument("DBSCAN: Input points cannot be empty.");
+    }
+
+    // Check for invalid points
+    for (const auto& point : points) {
+        if (std::isnan(point.x) || std::isnan(point.y) || std::isinf(point.x) || std::isinf(point.y)) {
+            throw std::invalid_argument("DBSCAN: Input points contain invalid coordinates.");
+        }
+    }
+
     int clusterId = 0;
     #pragma omp parallel for
     for (size_t i = 0; i < points.size(); i++) {

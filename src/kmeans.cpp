@@ -7,6 +7,7 @@
 #include <ctime>
 #include <iostream>
 #include <omp.h>
+#include <stdexcept> 
 
 using namespace std;
 
@@ -65,6 +66,26 @@ std::vector<Point> updateCentroids(const std::vector<Point>& points, const std::
 
 // K-Means algorithm implementation
 std::vector<Point> kmeans(std::vector<Point>& points, int k, int maxIterations) {
+    if (k <= 0) {
+        throw std::invalid_argument("K-Means: 'k' must be greater than 0.");
+    }
+    if (k > points.size()) {
+        throw std::invalid_argument("K-Means: 'k' must not exceed the number of points.");
+    }
+    if (maxIterations <= 0) {
+        throw std::invalid_argument("K-Means: 'maxIterations' must be greater than 0.");
+    }
+    if (points.empty()) {
+        throw std::invalid_argument("K-Means: Input points cannot be empty.");
+    }
+
+    // Check for invalid points
+    for (const auto& point : points) {
+        if (std::isnan(point.x) || std::isnan(point.y) || std::isinf(point.x) || std::isinf(point.y)) {
+            throw std::invalid_argument("K-Means: Input points contain invalid coordinates.");
+        }
+    }
+
     // Initialize centroids randomly
     std::vector<Point> centroids = initializeCentroids(points, k);
     std::vector<int> clusters(points.size());

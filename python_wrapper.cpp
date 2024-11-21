@@ -27,17 +27,6 @@ std::vector<std::tuple<double, double, int>> py_dbscan(const std::vector<std::tu
     return convert_to_python(clustered_points);
 }
 
-// Python wrapper for GPU DBSCAN
-std::vector<std::tuple<double, double, int>> py_dbscan_gpu(const std::vector<std::tuple<double, double>>& data, double eps, int minPts) {
-    std::vector<Point> points;
-    for (const auto& [x, y] : data) {
-        points.push_back({x, y, 0});
-    }
-
-    std::vector<Point> clustered_points = dbscan_gpu(points, eps, minPts);
-    return convert_to_python(clustered_points);
-}
-
 // Python wrapper for CPU K-Means
 std::vector<std::tuple<double, double, int>> py_kmeans(const std::vector<std::tuple<double, double>>& data, int k, int maxIterations) {
     std::vector<Point> points;
@@ -46,17 +35,6 @@ std::vector<std::tuple<double, double, int>> py_kmeans(const std::vector<std::tu
     }
 
     std::vector<Point> clustered_points = kmeans(points, k, maxIterations);
-    return convert_to_python(clustered_points);
-}
-
-// Python wrapper for GPU K-Means
-std::vector<std::tuple<double, double, int>> py_kmeans_gpu(const std::vector<std::tuple<double, double>>& data, int k, int maxIterations) {
-    std::vector<Point> points;
-    for (const auto& [x, y] : data) {
-        points.push_back({x, y, 0});
-    }
-
-    std::vector<Point> clustered_points = kmeans_gpu(points, k, maxIterations);
     return convert_to_python(clustered_points);
 }
 
@@ -70,10 +48,5 @@ PYBIND11_MODULE(clusterbox, m) {
     m.def("kmeans", &py_kmeans, "Run K-Means clustering (CPU)",
           py::arg("data"), py::arg("k"), py::arg("maxIterations"));
 
-    // GPU implementations
-    m.def("dbscan_gpu", &py_dbscan_gpu, "Run DBSCAN clustering (GPU)",
-          py::arg("data"), py::arg("eps"), py::arg("minPts"));
-    m.def("kmeans_gpu", &py_kmeans_gpu, "Run K-Means clustering (GPU)",
-          py::arg("data"), py::arg("k"), py::arg("maxIterations"));
 }
 
