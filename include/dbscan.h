@@ -4,6 +4,6 @@
 #include <vector>
 #include "point.h"
 
-std::vector<int> dbscan(const std::vector<Point>& points, double epsilon, int minPoints);
+std::vector<Point> dbscan(std::vector<Point>& points, double eps, int minPts);
 
 #endif // DBSCAN_H

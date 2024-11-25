@@ -4,6 +4,6 @@
 #include <vector>
 #include "point.h"
 
-void kMeans(std::vector<Point>& points, int k, int maxIterations);
+std::vector<Point> kmeans(std::vector<Point>& points, int k, int maxIterations);
 
 #endif // KMEANS_H
