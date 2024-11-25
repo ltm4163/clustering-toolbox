@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # **Clustering Toolbox**
 
 This project implements clustering algorithms, including **DBSCAN** and **K-Means**, in C++ with Python bindings via `pybind11`. These algorithms are accessible in Python for further testing and visualization. The GPU implementation has been excluded from the final project due to unresolved issues.
