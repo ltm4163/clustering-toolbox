@@ -5,14 +5,16 @@
 #include <cmath>
 #include <queue>
 #include <unordered_set>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <stdexcept>
 
 using namespace std;
 
-
 // Region Query Function
 std::vector<int> regionQuery(const std::vector<Point>& points, int pointIdx, double eps) {
+    #ifdef _OPENMP
     std::vector<std::vector<int>> threadNeighbors(omp_get_max_threads());
 
     #pragma omp parallel
@@ -33,8 +35,17 @@ std::vector<int> regionQuery(const std::vector<Point>& points, int pointIdx, dou
         neighbors.insert(neighbors.end(), localNeighbors.begin(), localNeighbors.end());
     }
     return neighbors;
-}
 
+    #else
+    std::vector<int> neighbors;
+    for (size_t i = 0; i < points.size(); i++) {
+        if (euclideanDistance(points[pointIdx], points[i]) <= eps) {
+            neighbors.push_back(i);
+        }
+    }
+    return neighbors;
+    #endif
+}
 // Expand Cluster Function
 void expandCluster(std::vector<Point>& points, int pointIdx, const std::vector<int>& neighbors,
                    int clusterId, double eps, int minPts) {

@@ -6,8 +6,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <omp.h>
 #include <stdexcept> 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace std;
 
@@ -20,9 +22,12 @@ std::vector<Point> initializeCentroids(const std::vector<Point>& points, int k) 
     return centroids;
 }
 
+// Assign Points to Clusters
 std::vector<int> assignPointsToClusters(const std::vector<Point>& points, const std::vector<Point>& centroids) {
     std::vector<int> clusters(points.size());
+    #ifdef _OPENMP
     #pragma omp parallel for
+    #endif
     for (size_t i = 0; i < points.size(); ++i) {
         double minDistance = std::numeric_limits<double>::max();
         for (size_t j = 0; j < centroids.size(); ++j) {
@@ -36,12 +41,17 @@ std::vector<int> assignPointsToClusters(const std::vector<Point>& points, const 
     return clusters;
 }
 
+// Update Centroids
 std::vector<Point> updateCentroids(const std::vector<Point>& points, const std::vector<int>& clusters, int k) {
     std::vector<Point> centroids(k, Point(std::vector<double>(points[0].coordinates.size(), 0.0)));
     std::vector<int> counts(k, 0);
+    #ifdef _OPENMP
     #pragma omp parallel for
+    #endif
     for (size_t i = 0; i < points.size(); ++i) {
+        #ifdef _OPENMP
         #pragma omp critical 
+        #endif
         {
             for (size_t dim = 0; dim < points[i].coordinates.size(); ++dim) {
                 centroids[clusters[i]].coordinates[dim] += points[i].coordinates[dim];
@@ -50,7 +60,9 @@ std::vector<Point> updateCentroids(const std::vector<Point>& points, const std::
         }
     }
 
+    #ifdef _OPENMP
     #pragma omp parallel for
+    #endif
     for (int i = 0; i < k; ++i) {
         if (counts[i] > 0) {
             for (size_t dim = 0; dim < centroids[i].coordinates.size(); ++dim) {
