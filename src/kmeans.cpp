@@ -11,8 +11,6 @@
 
 using namespace std;
 
-
-// Initialize random centroids
 std::vector<Point> initializeCentroids(const std::vector<Point>& points, int k) {
     std::vector<Point> centroids;
     std::srand(std::time(0));
@@ -22,7 +20,6 @@ std::vector<Point> initializeCentroids(const std::vector<Point>& points, int k) 
     return centroids;
 }
 
-// Assign points to the nearest centroid
 std::vector<int> assignPointsToClusters(const std::vector<Point>& points, const std::vector<Point>& centroids) {
     std::vector<int> clusters(points.size());
     #pragma omp parallel for
@@ -39,25 +36,26 @@ std::vector<int> assignPointsToClusters(const std::vector<Point>& points, const 
     return clusters;
 }
 
-// Update centroids based on assigned clusters
 std::vector<Point> updateCentroids(const std::vector<Point>& points, const std::vector<int>& clusters, int k) {
-    std::vector<Point> centroids(k, {0, 0, 0});
+    std::vector<Point> centroids(k, Point(std::vector<double>(points[0].coordinates.size(), 0.0)));
     std::vector<int> counts(k, 0);
     #pragma omp parallel for
     for (size_t i = 0; i < points.size(); ++i) {
         #pragma omp critical 
         {
-            centroids[clusters[i]].x += points[i].x;
-            centroids[clusters[i]].y += points[i].y;
+            for (size_t dim = 0; dim < points[i].coordinates.size(); ++dim) {
+                centroids[clusters[i]].coordinates[dim] += points[i].coordinates[dim];
+            }
             counts[clusters[i]]++;
         }
     }
-    
+
     #pragma omp parallel for
     for (int i = 0; i < k; ++i) {
         if (counts[i] > 0) {
-            centroids[i].x /= counts[i];
-            centroids[i].y /= counts[i];
+            for (size_t dim = 0; dim < centroids[i].coordinates.size(); ++dim) {
+                centroids[i].coordinates[dim] /= counts[i];
+            }
         }
     }
 
@@ -79,12 +77,6 @@ std::vector<Point> kmeans(std::vector<Point>& points, int k, int maxIterations) 
         throw std::invalid_argument("K-Means: Input points cannot be empty.");
     }
 
-    // Check for invalid points
-    for (const auto& point : points) {
-        if (std::isnan(point.x) || std::isnan(point.y) || std::isinf(point.x) || std::isinf(point.y)) {
-            throw std::invalid_argument("K-Means: Input points contain invalid coordinates.");
-        }
-    }
 
     // Initialize centroids randomly
     std::vector<Point> centroids = initializeCentroids(points, k);

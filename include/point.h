@@ -1,32 +1,39 @@
 #ifndef POINT_H
 #define POINT_H
 
-#include <cmath> // For floating-point comparisons
+#include <cmath>
 #include <iostream>
+#include <vector>
 
 struct Point {
-    double x, y;
+    std::vector<double> coordinates;
     int cluster;
 
     // Default constructor
-    #ifdef __CUDACC__
-    __device__ __host__
-    #endif
-    Point(double _x = 0.0, double _y = 0.0, int _cluster = -1)
-        : x(_x), y(_y), cluster(_cluster) {}
+    Point(const std::vector<double>& coords = {}, int _cluster = -1)
+        : coordinates(coords), cluster(_cluster) {}
 
-    // Equality operator
-    #ifdef __CUDACC__
-    __device__ __host__
-    #endif
+    // Equality operator for checking convergence in K-Means
     bool operator==(const Point& other) const {
-        const double epsilon = 1e-9; // Tolerance for floating-point comparisons
-        return (fabs(x - other.x) < epsilon && fabs(y - other.y) < epsilon && cluster == other.cluster);
+        if (coordinates.size() != other.coordinates.size()) return false;
+        for (size_t i = 0; i < coordinates.size(); ++i) {
+            if (fabs(coordinates[i] - other.coordinates[i]) > 1e-9) {
+                return false;
+            }
+        }
+        return cluster == other.cluster;
     }
 
-    // Optional: Print function for debugging on the host
+    // Print function for debugging
     void print() const {
-        std::cout << "Point(" << x << ", " << y << ", cluster=" << cluster << ")" << std::endl;
+        std::cout << "Point(";
+        for (size_t i = 0; i < coordinates.size(); ++i) {
+            std::cout << coordinates[i];
+            if (i < coordinates.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << ", cluster=" << cluster << ")" << std::endl;
     }
 };
 

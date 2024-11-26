@@ -9,7 +9,6 @@
 
 using namespace std;
 
-// Find all neighbors of a point within the given radius (eps)
 std::vector<int> regionQuery(const std::vector<Point>& points, int pointIdx, double eps) {
     std::vector<int> neighbors;
     #pragma omp parallel for
@@ -22,7 +21,6 @@ std::vector<int> regionQuery(const std::vector<Point>& points, int pointIdx, dou
     return neighbors;
 }
 
-// Expand the cluster starting from the given point
 void expandCluster(std::vector<Point>& points, int pointIdx, const std::vector<int>& neighbors,
                    int clusterId, double eps, int minPts) {
     points[pointIdx].cluster = clusterId;
@@ -62,13 +60,6 @@ std::vector<Point> dbscan(std::vector<Point>& points, double eps, int minPts) {
     }
     if (points.empty()) {
         throw std::invalid_argument("DBSCAN: Input points cannot be empty.");
-    }
-
-    // Check for invalid points
-    for (const auto& point : points) {
-        if (std::isnan(point.x) || std::isnan(point.y) || std::isinf(point.x) || std::isinf(point.y)) {
-            throw std::invalid_argument("DBSCAN: Input points contain invalid coordinates.");
-        }
     }
 
     int clusterId = 0;

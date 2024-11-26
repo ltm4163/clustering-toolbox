@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include <cstdlib>
 #include <stdexcept>
 #include "dbscan.h"
@@ -8,7 +10,7 @@
 #include "point.h"
 
 void printUsage() {
-    std::cout << "Usage: clustering_toolbox <algorithm> [options]\n";
+    std::cout << "Usage: clustering_toolbox <algorithm> [options] --input <input_file> --output <output_file>\n";
     std::cout << "\nAvailable algorithms:\n";
     std::cout << "  dbscan  : Run DBSCAN clustering\n";
     std::cout << "  kmeans  : Run K-Means clustering\n";
@@ -18,6 +20,9 @@ void printUsage() {
     std::cout << "\nOptions for K-Means:\n";
     std::cout << "  --k <value>         : Number of clusters\n";
     std::cout << "  --maxIterations <value> : Maximum iterations for convergence\n";
+    std::cout << "\nRequired Arguments:\n";
+    std::cout << "  --input <input_file>   : Input file containing points\n";
+    std::cout << "  --output <output_file> : Output file to write labeled points\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -27,49 +32,90 @@ int main(int argc, char* argv[]) {
     }
 
     std::string algorithm = argv[1];
-    std::vector<Point> points = {
-        {1.0, 2.0}, {2.0, 3.0}, {3.0, 4.0}, {5.0, 7.0}, {8.0, 8.0}
-    };
+    std::string inputFile;
+    std::string outputFile;
+    double eps = 0.5;
+    int minPts = 2;
+    int k = 2;
+    int maxIterations = 100;
 
+    // Parse command line arguments
+    for (int i = 2; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--eps" && i + 1 < argc) {
+            eps = std::stod(argv[++i]);
+        } else if (arg == "--minPts" && i + 1 < argc) {
+            minPts = std::stoi(argv[++i]);
+        } else if (arg == "--k" && i + 1 < argc) {
+            k = std::stoi(argv[++i]);
+        } else if (arg == "--maxIterations" && i + 1 < argc) {
+            maxIterations = std::stoi(argv[++i]);
+        } else if (arg == "--input" && i + 1 < argc) {
+            inputFile = argv[++i];
+        } else if (arg == "--output" && i + 1 < argc) {
+            outputFile = argv[++i];
+        } else {
+            throw std::invalid_argument("Invalid argument: " + arg);
+        }
+    }
+
+    if (inputFile.empty() || outputFile.empty()) {
+        printUsage();
+        return 1;
+    }
+
+    // Read points from input file
+    std::vector<Point> points;
+    std::ifstream infile(inputFile);
+    if (!infile) {
+        std::cerr << "Error: Could not open input file " << inputFile << std::endl;
+        return 1;
+    }
+
+    std::string line;
+    while (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        std::vector<double> coords;
+        double value;
+        while (iss >> value) {
+            coords.push_back(value);
+        }
+        points.emplace_back(coords);
+    }
+    infile.close();
+
+    // Run the specified clustering algorithm
     try {
         if (algorithm == "dbscan") {
-            double eps = 0.5;
-            int minPts = 2;
-
-            for (int i = 2; i < argc; ++i) {
-                std::string arg = argv[i];
-                if (arg == "--eps" && i + 1 < argc) {
-                    eps = std::stod(argv[++i]);
-                } else if (arg == "--minPts" && i + 1 < argc) {
-                    minPts = std::stoi(argv[++i]);
-                } else {
-                    throw std::invalid_argument("Invalid argument for DBSCAN: " + arg);
-                }
-            }
-
             std::vector<Point> result = dbscan(points, eps, minPts);
-            for (const auto& point : result) {
-                point.print();
+            // Write results to output file
+            std::ofstream outfile(outputFile);
+            if (!outfile) {
+                std::cerr << "Error: Could not open output file " << outputFile << std::endl;
+                return 1;
             }
-        } else if (algorithm == "kmeans") {
-            int k = 2;
-            int maxIterations = 100;
-
-            for (int i = 2; i < argc; ++i) {
-                std::string arg = argv[i];
-                if (arg == "--k" && i + 1 < argc) {
-                    k = std::stoi(argv[++i]);
-                } else if (arg == "--maxIterations" && i + 1 < argc) {
-                    maxIterations = std::stoi(argv[++i]);
-                } else {
-                    throw std::invalid_argument("Invalid argument for K-Means: " + arg);
+            for (const auto& point : result) {
+                for (size_t i = 0; i < point.coordinates.size(); ++i) {
+                    outfile << point.coordinates[i] << (i < point.coordinates.size() - 1 ? " " : "");
                 }
+                outfile << " " << point.cluster << "\n";
             }
-
+            outfile.close();
+        } else if (algorithm == "kmeans") {
             std::vector<Point> result = kmeans(points, k, maxIterations);
-            for (const auto& point : result) {
-                point.print();
+            // Write results to output file
+            std::ofstream outfile(outputFile);
+            if (!outfile) {
+                std::cerr << "Error: Could not open output file " << outputFile << std::endl;
+                return 1;
             }
+            for (const auto& point : result) {
+                for (size_t i = 0; i < point.coordinates.size(); ++i) {
+                    outfile << point.coordinates[i] << (i < point.coordinates.size() - 1 ? " " : "");
+                }
+                outfile << " " << point.cluster << "\n";
+            }
+            outfile.close();
         } else {
             throw std::invalid_argument("Invalid algorithm name: " + algorithm);
         }

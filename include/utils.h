@@ -4,12 +4,17 @@
 #include "point.h"
 #include <cmath>
 
-// Euclidean distance function compatible with both CUDA and C++
-#ifdef __CUDACC__
-__device__ __host__
-#endif
+// Euclidean distance function for n-dimensional data
 inline double euclideanDistance(const Point& a, const Point& b) {
-    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+    if (a.coordinates.size() != b.coordinates.size()) {
+        throw std::invalid_argument("Points must have the same dimensionality.");
+    }
+    double sum = 0.0;
+    for (size_t i = 0; i < a.coordinates.size(); ++i) {
+        sum += (a.coordinates[i] - b.coordinates[i]) * (a.coordinates[i] - b.coordinates[i]);
+    }
+    return sqrt(sum);
 }
 
 #endif // UTILS_H
+
