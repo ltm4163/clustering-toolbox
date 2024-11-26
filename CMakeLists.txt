@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(SOURCES
     src/dbscan.cpp
     src/kmeans.cpp
+    src/pca.cpp
     src/cli.cpp  # Assuming the CLI file is named cli.cpp
 )
 
@@ -24,6 +25,9 @@ find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(clustering_toolbox PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Set installation rules
 install(TARGETS clustering_toolbox DESTINATION bin)
