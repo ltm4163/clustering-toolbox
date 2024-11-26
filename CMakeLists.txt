@@ -1,35 +1,30 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 
-project(ClusteringToolbox LANGUAGES CXX)
+project(ClusteringToolbox)
 
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-include_directories(/home/stu11/s12/ltm4163/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include)
-include_directories(/usr/share/R/include)  
-
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-find_package(pybind11 REQUIRED)
-find_package(OpenMP REQUIRED)
-
-# Python module
-pybind11_add_module(clusterbox
-    src/python_wrapper.cpp
+# Add source files
+set(SOURCES
     src/dbscan.cpp
     src/kmeans.cpp
+    src/cli.cpp  # Assuming the CLI file is named cli.cpp
 )
 
-# R module
-add_library(rclusterbox MODULE
-    src/dbscan.cpp
-    src/kmeans.cpp
-    src/rcpp_wrapper.cpp
-)
+# Include directories
+include_directories(include)
 
-target_link_libraries(clusterbox PRIVATE Python3::Python)
-target_link_libraries(rclusterbox PRIVATE ${R_LIBRARIES})
+# Create executable
+add_executable(clustering_toolbox ${SOURCES})
 
-include_directories(${R_INCLUDE_DIRS} include)
+# Find OpenMP (optional)
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(clustering_toolbox PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
-set_target_properties(clusterbox PROPERTIES PREFIX "")
-set_target_properties(rclusterbox PROPERTIES PREFIX "")
+# Set installation rules
+install(TARGETS clustering_toolbox DESTINATION bin)
 
